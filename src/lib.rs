@@ -46,39 +46,6 @@ pub enum ControlSeq {
     //   Redefines a keyboard key to a specified string.
 }
 
-#[derive(PartialEq,Eq,Debug)]
-pub enum Color { Black }
-#[derive(PartialEq,Eq,Debug)]
-pub struct Style;
-
-#[derive(PartialEq,Eq,Debug)]
-pub struct ColoredString {
-    input: String,
-    fgcolor: Option<Color>,
-    bgcolor: Option<Color>,
-    style: Option<Style>
-}
-
-impl Default for ColoredString {
-    fn default() -> ColoredString {
-        ColoredString {
-            input: String::new(),
-            fgcolor: None,
-            bgcolor: None,
-            style: None
-        }
-    }
-}
-
-impl<'a> From<&'a str> for ColoredString {
-    fn from(input: &'a str) -> Self {
-        ColoredString { input: String::from(input), .. ColoredString::default() }
-    }
-}
-
-//#[derive(Debug,Default)]
-//struct ParserState;
-
 pub fn parse_seq(input: &[u8], len: usize) -> Option<(usize, ControlSeq)> {
     use ControlSeq::*;
     let mut idx = 0;

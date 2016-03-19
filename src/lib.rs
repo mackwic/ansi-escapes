@@ -108,7 +108,7 @@ pub fn parse_seq(input: &[u8], len: usize) -> Option<(usize, ControlSeq)> {
         }}
     }
 
-    while idx < len {
+    while (idx + 1) < len {
         idx += 1;
 
         // Parse either 1 value Controls or the first value of the sequence
@@ -128,15 +128,16 @@ pub fn parse_seq(input: &[u8], len: usize) -> Option<(usize, ControlSeq)> {
         }
     };
 
-    while idx < len {
+    while (idx + 1) < len {
         idx += 1;
 
-        // parse sequence of values separated by a ';' ending by [Hfm]
+        // parse sequence of values separated by a ';' ending with [Hfm]
 
         match input[idx] as char {
             c@'0'...'9' => cur_val.push(c),
             ';' => parse_val_and_queue!(),
             'H'|'f' => {
+                parse_val_and_queue!();
                 if values.len() < 2 {
                     return None;
                 } else {
@@ -186,13 +187,22 @@ mod tests_parseseq {
     test_simple_escape!(cursor_top_left1: "[H" => ControlSeq::CursorPositionTopLeft);
     test_simple_escape!(cursor_top_left2: "[f" => ControlSeq::CursorPositionTopLeft);
     test_simple_escape!(erase_display: "[2J" => ControlSeq::EraseDisplay);
-    test_simple_escape!(erase_line: "[k" => ControlSeq::EraseLine);
+    test_simple_escape!(erase_line: "[K" => ControlSeq::EraseLine);
     test_simple_escape!(cursor_pos_1: "[0;222H" => ControlSeq::CursorPositionYX(0,222));
     test_simple_escape!(cursor_pos_2: "[22;19H" => ControlSeq::CursorPositionYX(22,19));
-    test_simple_escape!(cursor_up: "[9999A" => ControlSeq::CursorUp(9999));
-    test_simple_escape!(cursor_down: "[000000B" => ControlSeq::CursorDown(0));
-    test_simple_escape!(cursor_forward: "[1234567890C" => ControlSeq::CursorForward(1234567890));
-    test_simple_escape!(cursor_backward: "[1D" => ControlSeq::CursorBackward(1));
+    test_simple_escape!(cursor_pos_3: "[99999;1111f" => ControlSeq::CursorPositionYX(99999,1111));
+    test_simple_escape!(cursor_pos_4: "[000;1f" => ControlSeq::CursorPositionYX(0,1));
+    test_simple_escape!(cursor_pos_5: "[000;1;1f" => ControlSeq::CursorPositionYX(0,1));
+    test_simple_escape!(cursor_pos_6: "[000;1;1;1f" => ControlSeq::CursorPositionYX(0,1));
+    test_simple_escape!(cursor_up1: "[9999A" => ControlSeq::CursorUp(9999));
+    test_simple_escape!(cursor_up2: "[9A" => ControlSeq::CursorUp(9));
+    test_simple_escape!(cursor_down1: "[000000B" => ControlSeq::CursorDown(0));
+    test_simple_escape!(cursor_down2: "[0B" => ControlSeq::CursorDown(0));
+    test_simple_escape!(cursor_down3: "[1B" => ControlSeq::CursorDown(1));
+    test_simple_escape!(cursor_forward1: "[1C" => ControlSeq::CursorForward(1));
+    test_simple_escape!(cursor_forward2: "[1234567890C" => ControlSeq::CursorForward(1234567890));
+    test_simple_escape!(cursor_backward1: "[1D" => ControlSeq::CursorBackward(1));
+    test_simple_escape!(cursor_backward2: "[16543D" => ControlSeq::CursorBackward(16543));
 
     test_none!(too_short1: "[");
     test_none!(too_short2: "");
